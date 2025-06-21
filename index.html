@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vision Studio - Simple Notes & Images</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              notion: [
+                "ui-sans-serif",
+                "system-ui",
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "Segoe UI",
+                "Roboto",
+                "Helvetica Neue",
+                "Arial",
+                "sans-serif",
+              ],
+            },
+            animation: {
+              "slide-in": "slideIn 0.3s ease-out",
+              "fade-in": "fadeIn 0.2s ease-out",
+              "pulse-gentle": "pulseGentle 2s ease-in-out infinite",
+              "float-up": "floatUp 0.3s ease-out",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @keyframes slideIn {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulseGentle {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+      @keyframes floatUp {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+
+      /* Notion-like hover effects */
+      .notion-block:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+
+      .notion-button {
+        transition: all 0.15s ease;
+      }
+
+      .notion-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Modern glass effect */
+      .glass-panel {
+        backdrop-filter: blur(10px);
+        background: rgba(17, 24, 39, 0.8);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+      }
+
+      /* Floating action styles */
+      .floating-controls {
+        backdrop-filter: blur(20px);
+        background: rgba(31, 41, 55, 0.95);
+        border: 1px solid rgba(75, 85, 99, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      } /* Mobile action buttons - integrated into page header */
+
+      /* Drag and Drop Styles */
+      .page-item {
+        position: relative;
+        transition: all 0.2s ease;
+      }
+
+      .page-item.dragging {
+        transform: rotate(2deg);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+      }
+
+      .page-item.drag-over {
+        background: rgba(59, 130, 246, 0.1) !important;
+        border: 1px dashed rgba(59, 130, 246, 0.5) !important;
+      }
+
+      .drag-handle {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .page-item:hover .drag-handle {
+        opacity: 1;
+      }
+
+      .drop-indicator {
+        animation: pulse-glow 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+        }
+        50% {
+          opacity: 0.7;
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+        }
+      } /* Improved cursor styles */
+      .cursor-grab {
+        cursor: grab;
+      }
+
+      .cursor-grabbing {
+        cursor: grabbing;
+      }
+
+      /* Block Drag and Drop Styles */
+      .block-item {
+        position: relative;
+        transition: all 0.2s ease;
+      }
+
+      .block-item.dragging {
+        transform: rotate(1deg);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        z-index: 1000;
+      }
+
+      .block-item.block-drag-over {
+        background: rgba(139, 92, 246, 0.1) !important;
+        border: 1px dashed rgba(139, 92, 246, 0.5) !important;
+        border-radius: 8px;
+      }
+
+      .block-drag-handle {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .block-item:hover .block-drag-handle {
+        opacity: 1;
+      }
+
+      .block-drop-indicator {
+        animation: pulse-glow 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
+        }
+        50% {
+          opacity: 0.7;
+          box-shadow: 0 0 12px rgba(139, 92, 246, 0.9);
+        }
+      }
+
+      /* Enhanced block hover effects */
+      .notion-block:hover .notion-handle {
+        opacity: 1;
+      }
+
+      .notion-block .notion-handle {
+        transition: opacity 0.2s ease;
+      } /* Prevent text selection during drag */
+      .block-item.dragging * {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      } /* Enhanced stacking order and visibility */
+      .controls-container {
+        z-index: 9999 !important;
+        position: fixed !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        background: rgba(17, 24, 39, 0.95) !important;
+        backdrop-filter: blur(12px) !important;
+        border-radius: 8px !important;
+        padding: 6px !important;
+        border: 1px solid rgba(75, 85, 99, 0.3) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+      }
+
+      /* Unified control bar buttons */
+      .controls-container button {
+        min-width: 36px !important;
+        min-height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: none !important;
+        cursor: pointer !important;
+      }
+
+      /* Divider in control bar */
+      .controls-container .w-px {
+        background: rgba(75, 85, 99, 0.5) !important;
+      }
+
+      /* Page navigation controls styling */
+      #pageNavigation {
+        z-index: 50 !important;
+        position: relative;
+      }
+
+      #pageNavigation button {
+        z-index: 51 !important;
+        position: relative;
+        min-width: 40px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Ensure modals stay below navigation controls */
+      #binauralControls {
+        z-index: 40 !important;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      #solfeggioModal {
+        z-index: 40 !important;
+      }
+
+      /* Make sure the page header doesn't overlap with controls */
+      .px-6.py-4.border-b {
+        position: relative;
+        z-index: 30;
+      } /* Mobile-First Responsive Design */
+      @media (max-width: 768px) {
+        /* Hide sidebar by default on mobile */
+        .sidebar-main {
+          transform: translateX(-100%);
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          z-index: 9998;
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar-main.mobile-open {
+          transform: translateX(0);
+        }
+
+        /* Overlay for mobile sidebar */
+        .mobile-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 9997;
+          backdrop-filter: blur(4px);
+        }
+
+        /* Main content takes full width on mobile */
+        .flex-1 {
+          width: 100% !important;
+        }
+
+        /* Mobile header controls */
+        .controls-container {
+          top: 0.5rem !important;
+          left: 0.5rem !important;
+          right: 0.5rem !important;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          max-width: none !important;
+          width: calc(100vw - 1rem) !important;
+        }
+
+        .controls-container button {
+          min-width: 36px !important;
+          min-height: 36px !important;
+          padding: 0.5rem !important;
+          font-size: 14px !important;
+        } /* Mobile bottom navigation */
+        /* Removed - using integrated header actions instead */ /* Mobile content adjustments */
+        #pageContent {
+          padding: 1rem !important;
+          padding-bottom: 2rem !important;
+        }
+
+        /* Mobile page header with action buttons */
+        .page-header-mobile {
+          background: rgba(17, 24, 39, 0.95);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+          padding: 1rem;
+          position: sticky;
+          top: 0;
+          z-index: 40;
+        }
+
+        .mobile-action-bar {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.75rem;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 0.25rem;
+        }
+
+        .mobile-action-btn {
+          flex-shrink: 0;
+          background: rgba(75, 85, 99, 0.3);
+          border: 1px solid rgba(75, 85, 99, 0.5);
+          color: #e5e7eb;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-width: max-content;
+          touch-action: manipulation;
+        }
+
+        .mobile-action-btn:hover,
+        .mobile-action-btn:active {
+          background: rgba(99, 102, 241, 0.3);
+          border-color: rgba(99, 102, 241, 0.5);
+          color: #c7d2fe;
+          transform: translateY(-1px);
+        }
+
+        /* Mobile binaural controls */
+        #binauralControls {
+          margin: 1rem !important;
+          padding: 1rem !important;
+          max-height: calc(100vh - 80px) !important;
+        }
+
+        #binauralControls .grid-cols-1.lg\\:grid-cols-2 {
+          grid-template-columns: 1fr !important;
+        }
+
+        #binauralControls .grid-cols-3 {
+          grid-template-columns: 1fr !important;
+          gap: 0.5rem !important;
+        }
+
+        #binauralControls .grid-cols-2 {
+          grid-template-columns: 1fr !important;
+          gap: 0.5rem !important;
+        }
+
+        /* Mobile solfeggio modal */
+        #solfeggioModal {
+          margin: 0.5rem !important;
+          padding: 1rem !important;
+          max-height: calc(100vh - 60px) !important;
+          overflow-y: auto !important;
+        }
+
+        #solfeggioModal .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+          grid-template-columns: 1fr !important;
+        }
+
+        /* Mobile welcome content */
+        .text-6xl {
+          font-size: 3rem !important;
+        }
+
+        .text-xl {
+          font-size: 1.125rem !important;
+        }
+
+        .grid-cols-1.md\\:grid-cols-2 {
+          grid-template-columns: 1fr !important;
+        }
+
+        /* Mobile page header */
+        .px-6.py-4 {
+          padding: 1rem !important;
+        }
+
+        .text-2xl {
+          font-size: 1.5rem !important;
+        }
+
+        /* Mobile block items */
+        .block-item {
+          padding: 0.75rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+
+        /* Mobile image handling */
+        .block-item img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+
+        /* Touch-friendly text editing */
+        .notion-block {
+          min-height: 44px !important;
+          padding: 0.75rem !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        /* Extra small screens */
+        .controls-container {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 0.5rem !important;
+        }
+
+        .controls-container > div {
+          display: flex !important;
+          justify-content: space-between !important;
+          gap: 0.5rem !important;
+        }
+
+        .nav-btn {
+          width: 36px !important;
+          height: 36px !important;
+        }
+
+        .text-lg {
+          font-size: 1rem !important;
+        }
+
+        #binauralControls h2 {
+          font-size: 1.25rem !important;
+        }
+
+        #solfeggioModal h2 {
+          font-size: 1.5rem !important;
+        }
+      }
+
+      /* Tablet adjustments */
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .sidebar-main {
+          width: 16rem !important;
+        }
+
+        #binauralControls .grid-cols-1.lg\\:grid-cols-2 {
+          grid-template-columns: 1fr 1fr !important;
+        }
+
+        #solfeggioModal .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+          grid-template-columns: 1fr 1fr !important;
+        }
+      }
+
+      /* Touch-friendly improvements for mobile */
+      .notion-block {
+        touch-action: manipulation;
+        user-select: text;
+        -webkit-user-select: text;
+      }
+
+      .notion-block:active {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      /* Better input focus styles for mobile */
+      input:focus,
+      textarea:focus,
+      [contenteditable]:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+
+      /* Improve touch targets */
+      button,
+      .nav-btn,
+      .notion-button {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+      }
+
+      /* Better drag handles for mobile */
+      .drag-handle,
+      .block-drag-handle {
+        min-width: 44px;
+        min-height: 44px;
+        touch-action: none;
+      }
+
+      /* Mobile-specific scrollbars */
+      @media (max-width: 768px) {
+        ::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: rgba(75, 85, 99, 0.5);
+          border-radius: 2px;
+        }
+      }
+
+      /* Prevent zoom on input focus on iOS */
+      @media screen and (-webkit-min-device-pixel-ratio: 0) {
+        select,
+        textarea,
+        input {
+          font-size: 16px !important;
+        }
+      }
+
+      /* Better image handling on mobile */
+      .block-item img {
+        max-width: 100%;
+        height: auto;
+        touch-action: pan-x pan-y;
+      }
+
+      /* Mobile-friendly modals */
+      @media (max-width: 768px) {
+        .glass-panel {
+          border-radius: 12px;
+        }
+
+        #binauralControls,
+        #solfeggioModal {
+          margin: 0.5rem;
+          max-height: calc(100vh - 1rem);
+          border-radius: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white min-h-screen font-notion"
+  >
+    <!-- App Container -->
+    <div class="flex h-screen relative">
+      <!-- Mobile Menu Button -->
+      <button
+        id="mobileMenuBtn"
+        class="fixed top-4 left-4 z-50 md:hidden bg-gray-800/90 backdrop-blur-sm border border-gray-600 p-3 rounded-lg transition-all hover:bg-gray-700/90"
+        onclick="toggleMobileSidebar()"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Mobile Overlay -->
+      <div
+        id="mobileOverlay"
+        class="mobile-overlay hidden"
+        onclick="closeMobileSidebar()"
+      ></div>
+
+      <!-- Modern Sidebar -->
+      <div
+        id="sidebar"
+        class="w-72 md:w-72 glass-panel border-r border-gray-700/50 flex flex-col sidebar-main"
+      >
+        <!-- Sidebar Header -->
+        <div class="p-4 md:p-6 border-b border-gray-700/50">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center"
+              >
+                <span class="text-sm font-bold">✨</span>
+              </div>
+              <h1
+                class="text-lg font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+              >
+                Vision Studio
+              </h1>
+            </div>
+            <!-- Close button for mobile -->
+            <button
+              class="md:hidden p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all"
+              onclick="closeMobileSidebar()"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
+          </div>
+          <!-- Quick Actions -->
+          <div class="space-y-2">
+            <button
+              onclick="createNewPage(); closeMobileSidebar();"
+              class="notion-button w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 p-3 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+            >
+              <span class="text-lg">➕</span>
+              New Vision Page
+            </button>
+          </div>
+        </div>
+        <!-- Page List -->
+        <div class="flex-1 overflow-y-auto p-4">
+          <div id="pageList" class="space-y-1"></div>
+        </div>
+        <!-- Sidebar Footer -->
+        <div class="p-3 md:p-4 border-t border-gray-700/50 space-y-2">
+          <button
+            onclick="showStats(); closeMobileSidebar();"
+            class="w-full bg-gray-800/50 hover:bg-gray-700/50 p-2.5 rounded-lg text-sm flex items-center gap-2 transition-all"
+          >
+            <span>📊</span>
+            Statistics
+          </button>
+
+          <div class="flex gap-2">
+            <button
+              onclick="exportData(); closeMobileSidebar();"
+              class="flex-1 bg-gray-800/50 hover:bg-gray-700/50 p-2.5 rounded-lg text-sm flex items-center justify-center gap-1.5 transition-all"
+            >
+              <span>📥</span>
+              Export
+            </button>
+            <button
+              onclick="importData(); closeMobileSidebar();"
+              class="flex-1 bg-gray-800/50 hover:bg-gray-700/50 p-2.5 rounded-lg text-sm flex items-center justify-center gap-1.5 transition-all"
+            >
+              <span>📤</span>
+              Import
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Main Content Area -->
+      <div class="flex-1 flex flex-col overflow-hidden w-full">
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto">
+          <!-- Binaural Beats Panel (Hidden by default) -->
+          <div
+            id="binauralControls"
+            class="hidden m-3 md:m-6 glass-panel rounded-xl p-4 md:p-6 animate-fade-in"
+          >
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center"
+                >
+                  <span class="text-lg">🎧</span>
+                </div>
+                <div>
+                  <h2 class="text-xl font-bold">Binaural Beats Studio</h2>
+                  <p class="text-sm text-gray-400">
+                    Configure your audio experience
+                  </p>
+                </div>
+              </div>
+              <button
+                onclick="closeBinauralControls()"
+                class="notion-button p-2.5 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all"
+              >
+                <span class="text-lg">✕</span>
+              </button>
+            </div>
+
+            <!-- Safety Warning -->
+            <div
+              class="bg-gradient-to-r from-red-600/20 to-orange-600/20 border border-red-500/30 p-4 rounded-lg mb-6"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">⚠️</span>
+                <div>
+                  <p class="font-bold text-red-400">Safety First</p>
+                  <p class="text-sm text-gray-300">
+                    Use headphones • Start low volume • Max 30 min sessions
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Frequency Verification -->
+            <div
+              id="verificationStatus"
+              class="hidden bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg mb-6"
+            >
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-lg">🔊</span>
+                <p class="font-bold text-blue-400">Frequency Verification</p>
+              </div>
+              <div id="freqStatus"></div>
+            </div>
+            <!-- Modern Control Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+              <!-- Left Column - Audio Settings -->
+              <div class="space-y-4 md:space-y-6">
+                <div class="bg-gray-800/30 p-5 rounded-lg">
+                  <label class="block text-sm font-medium text-gray-300 mb-3"
+                    >Audio Mode</label
+                  >
+                  <select
+                    id="mode"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  >
+                    <option value="binaural">🎧 Binaural Beats</option>
+                    <option value="pure">🎵 Pure Tone</option>
+                  </select>
+                </div>
+
+                <div class="bg-gray-800/30 p-5 rounded-lg">
+                  <label class="block text-sm font-medium text-gray-300 mb-3"
+                    >Carrier Frequency (Hz)</label
+                  >
+                  <div class="flex gap-3">
+                    <input
+                      id="carrier"
+                      type="number"
+                      value="200"
+                      min="80"
+                      max="800"
+                      class="flex-1 p-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    />
+                    <button
+                      onclick="verifyFrequency()"
+                      class="notion-button bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-4 rounded-lg text-sm font-medium transition-all"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Beat Frequency Controls -->
+                <div id="beatControls" class="bg-gray-800/30 p-5 rounded-lg">
+                  <label class="block text-sm font-medium text-gray-300 mb-3"
+                    >Beat Frequency Preset</label
+                  >
+                  <select
+                    id="beatPreset"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all mb-4"
+                  >
+                    <option value="custom">Custom Frequency</option>
+                    <optgroup label="🌙 Delta (Deep Sleep)">
+                      <option value="0.5">0.5 Hz - Deep Meditation</option>
+                      <option value="1">1 Hz - Deep Sleep</option>
+                      <option value="2">2 Hz - Dreamless Sleep</option>
+                      <option value="3">3 Hz - Deep Restorative Sleep</option>
+                    </optgroup>
+                    <optgroup label="🧘 Theta (Meditation)">
+                      <option value="4">4 Hz - Deep Meditation</option>
+                      <option value="5">5 Hz - REM Sleep</option>
+                      <option value="6">6 Hz - Creative Visualization</option>
+                      <option value="7">7 Hz - Deep Relaxation</option>
+                    </optgroup>
+                    <optgroup label="😌 Alpha (Relaxation)">
+                      <option value="8">8 Hz - Light Relaxation</option>
+                      <option value="10">10 Hz - Enhanced Focus</option>
+                      <option value="12">12 Hz - Calm Awareness</option>
+                    </optgroup>
+                    <optgroup label="🎯 Beta (Focus)">
+                      <option value="14">14 Hz - Alert Focus</option>
+                      <option value="18">18 Hz - Active Thinking</option>
+                      <option value="25">25 Hz - Intense Focus</option>
+                    </optgroup>
+                  </select>
+
+                  <label class="block text-sm font-medium text-gray-300 mb-3"
+                    >Beat Frequency (Hz)</label
+                  >
+                  <input
+                    id="beat"
+                    type="number"
+                    value="10"
+                    step="0.1"
+                    min="0.5"
+                    max="30"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
+                  <div class="mt-2 text-sm text-gray-400">
+                    <span id="beatDescription">Alpha - Relaxation</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Right Column - Playback Controls -->
+              <div class="space-y-4 md:space-y-6">
+                <div class="bg-gray-800/30 p-5 rounded-lg">
+                  <label class="block text-sm font-medium text-gray-300 mb-3">
+                    Volume:
+                    <span id="volDisplay" class="text-blue-400 font-mono"
+                      >30%</span
+                    >
+                  </label>
+                  <input
+                    type="range"
+                    id="volume"
+                    min="0"
+                    max="50"
+                    value="30"
+                    class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                </div>
+
+                <div class="bg-gray-800/30 p-5 rounded-lg">
+                  <label class="block text-sm font-medium text-gray-300 mb-3"
+                    >Session Duration</label
+                  >
+                  <select
+                    id="sessionDuration"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  >
+                    <option value="300">5 minutes</option>
+                    <option value="600">10 minutes</option>
+                    <option value="900">15 minutes</option>
+                    <option value="1200">20 minutes</option>
+                    <option value="1800">30 minutes</option>
+                  </select>
+                </div>
+                <!-- Playback Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button
+                    onclick="play()"
+                    id="playBtn"
+                    class="notion-button bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 p-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+                  >
+                    <span>▶️</span>
+                    <span>Play</span>
+                  </button>
+                  <button
+                    onclick="stop()"
+                    id="stopBtn"
+                    disabled
+                    class="notion-button bg-gray-600 p-3 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <span>⏹️</span>
+                    <span>Stop</span>
+                  </button>
+                  <button
+                    onclick="exportAudio()"
+                    class="notion-button bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 p-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+                  >
+                    <span>💾</span>
+                    <span>Export</span>
+                  </button>
+                </div>
+
+                <!-- Settings Management -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    onclick="saveBinauralSettings()"
+                    class="notion-button bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 p-3 rounded-lg text-sm font-medium transition-all"
+                  >
+                    💾 Save Settings
+                  </button>
+                  <button
+                    onclick="loadBinauralSettings()"
+                    class="notion-button bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 p-3 rounded-lg text-sm font-medium transition-all"
+                  >
+                    📁 Load Settings
+                  </button>
+                </div>
+
+                <!-- Session Timer -->
+                <div
+                  id="timer"
+                  class="hidden bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg"
+                >
+                  <div class="text-center text-blue-400 mb-3">
+                    <div class="text-lg font-mono">
+                      <span id="time">00:00</span> /
+                      <span id="sessionTime">30:00</span>
+                    </div>
+                  </div>
+                  <div class="w-full bg-gray-700 rounded-full h-3">
+                    <div
+                      id="progressBar"
+                      class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-300"
+                      style="width: 0%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Visualizations -->
+            <div
+              class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8"
+            >
+              <div class="bg-gray-800/30 p-4 rounded-lg">
+                <canvas
+                  id="viz"
+                  class="w-full h-24 bg-gray-900 rounded"
+                ></canvas>
+                <p class="text-xs text-gray-400 text-center mt-2">
+                  Waveform Visualization
+                </p>
+              </div>
+              <div class="bg-gray-800/30 p-4 rounded-lg">
+                <canvas
+                  id="spectrum"
+                  class="w-full h-24 bg-gray-900 rounded"
+                ></canvas>
+                <div class="text-xs text-gray-400 text-center mt-2">
+                  Frequency Spectrum (Peak:
+                  <span id="peakFreq" class="text-cyan-400 font-mono">-</span>
+                  Hz)
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Solfeggio Presets Modal -->
+          <div
+            id="solfeggioModal"
+            class="hidden m-3 md:m-6 glass-panel rounded-xl p-4 md:p-6 border-2 border-violet-500/30 animate-fade-in"
+          >
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center"
+                >
+                  <span class="text-lg">🎵</span>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-violet-300">
+                    Sacred Solfeggio Frequencies
+                  </h2>
+                  <p class="text-sm text-gray-400">
+                    Choose a sacred frequency to enhance your manifestation
+                  </p>
+                </div>
+              </div>
+              <button
+                onclick="closeSolfeggioModal()"
+                class="notion-button p-2.5 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all"
+              >
+                <span class="text-lg">✕</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- 174 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(174)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">174</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">174 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🛡️ Pain Relief & Foundation
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Reduces physical and emotional pain<br />
+                  • Provides sense of security and safety<br />
+                  • Helps with trauma healing<br />
+                  • Foundation for other healing work
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Healing sessions, pain management,
+                  establishing safety in manifestation work
+                </div>
+              </div>
+
+              <!-- 285 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(285)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">285</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">285 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🌿 Tissue Repair & Regeneration
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Accelerates healing of cuts and wounds<br />
+                  • Enhances immune system function<br />
+                  • Restructures damaged organs and tissues<br />
+                  • Promotes rapid recovery
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Health manifestation, recovery
+                  visualization, immune system boost
+                </div>
+              </div>
+
+              <!-- 396 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(396)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">396</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">396 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🔓 Liberation from Fear
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Releases fear and guilt patterns<br />
+                  • Grounds you to earth's energy<br />
+                  • Removes subconscious negative beliefs<br />
+                  • Cleanses trauma from family history
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Fear release, confidence building,
+                  breaking limiting beliefs
+                </div>
+              </div>
+
+              <!-- 417 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(417)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">417</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">417 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🔄 Facilitating Change
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Removes negative energy from body and space<br />
+                  • Facilitates change and transformation<br />
+                  • Cleanses traumatic experiences<br />
+                  • Encourages positive life changes
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Life transitions, habit breaking,
+                  clearing old patterns
+                </div>
+              </div>
+
+              <!-- 528 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-yellow-600/20 transition-all border-2 border-yellow-500/50 hover:border-yellow-400/70"
+                onclick="applySolfeggioFrequency(528)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-yellow-400 font-bold text-sm">528</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-yellow-300">528 Hz ⭐</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🧬 DNA Repair & Love
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Repairs DNA and cellular structure<br />
+                  • Frequency of love and miracles<br />
+                  • Increases life energy and vitality<br />
+                  • Promotes transformation and healing
+                </p>
+                <div
+                  class="text-xs text-yellow-200 bg-yellow-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Manifestation, DNA activation, love
+                  attraction, miracles
+                </div>
+              </div>
+
+              <!-- 639 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(639)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">639</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">639 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  ❤️ Harmonious Relationships
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Heals relationships and family bonds<br />
+                  • Encourages communication and understanding<br />
+                  • Promotes harmony in communities<br />
+                  • Balances emotions and feelings
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Relationship healing,
+                  communication, community building
+                </div>
+              </div>
+
+              <!-- 741 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(741)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">741</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">741 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  👁️ Awakening Intuition
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Awakens intuition and inner guidance<br />
+                  • Cleans and purifies cells from toxins<br />
+                  • Helps solve problems and express creativity<br />
+                  • Promotes self-expression and solutions
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Intuition development, problem
+                  solving, creative projects
+                </div>
+              </div>
+
+              <!-- 852 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-violet-600/20 transition-all border border-gray-700/50 hover:border-violet-500/50"
+                onclick="applySolfeggioFrequency(852)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-violet-400 font-bold text-sm">852</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-violet-300">852 Hz</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🔮 Spiritual Order
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Replaces negative thoughts with positive ones<br />
+                  • Awakens inner strength and self-realization<br />
+                  • Helps return to spiritual order<br />
+                  • Enhances communication with higher self
+                </p>
+                <div
+                  class="text-xs text-violet-200 bg-violet-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Spiritual growth, higher self
+                  connection, positive thinking
+                </div>
+              </div>
+
+              <!-- 963 Hz -->
+              <div
+                class="notion-block bg-gray-800/40 p-5 rounded-lg cursor-pointer hover:bg-purple-600/20 transition-all border-2 border-purple-500/50 hover:border-purple-400/70"
+                onclick="applySolfeggioFrequency(963)"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center"
+                  >
+                    <span class="text-purple-400 font-bold text-sm">963</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-purple-300">963 Hz ✨</h3>
+                </div>
+                <h4 class="font-semibold mb-2 text-gray-200">
+                  🌟 Divine Connection
+                </h4>
+                <p class="text-sm text-gray-300 mb-3">
+                  • Connects with divine consciousness<br />
+                  • Activates pineal gland and higher chakras<br />
+                  • Enables direct experience of non-vibrational energies<br />
+                  • Creates unity with universal energy
+                </p>
+                <div
+                  class="text-xs text-purple-200 bg-purple-500/10 p-2 rounded"
+                >
+                  <strong>Best for:</strong> Spiritual awakening, divine
+                  connection, enlightenment work
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="mt-6 bg-gradient-to-r from-violet-600/20 to-purple-600/20 border border-violet-500/30 p-4 rounded-lg"
+            >
+              <p class="text-center text-violet-200 text-sm">
+                ✨ <strong>Pro Tip:</strong> Each frequency will auto-configure
+                optimal binaural beat settings and save them to this page. You
+                can always fine-tune in the Binaural Beats settings afterward.
+              </p>
+            </div>
+          </div>
+          <!-- Main Page Content -->
+          <div id="pageContent" class="px-3 md:px-6 pb-6">
+            <!-- Welcome Screen Header -->
+            <div class="page-header-mobile md:hidden">
+              <div class="flex items-center justify-between">
+                <h1 class="text-lg font-bold text-white">
+                  Manifestation Studio
+                </h1>
+                <button
+                  onclick="toggleMobileSidebar()"
+                  class="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-all"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+              <!-- Mobile Action Bar -->
+              <div class="mobile-action-bar">
+                <button onclick="createNewPage()" class="mobile-action-btn">
+                  <span>➕</span>
+                  <span>New Page</span>
+                </button>
+                <button onclick="addText()" class="mobile-action-btn">
+                  <span>📝</span>
+                  <span>Add Text</span>
+                </button>
+                <button onclick="handleImageUpload()" class="mobile-action-btn">
+                  <span>🖼️</span>
+                  <span>Add Image</span>
+                </button>
+                <button
+                  onclick="showBinauralControls()"
+                  class="mobile-action-btn"
+                >
+                  <span>🎧</span>
+                  <span>Audio</span>
+                </button>
+                <button
+                  onclick="showSolfeggioPresets()"
+                  class="mobile-action-btn"
+                >
+                  <span>🎵</span>
+                  <span>Frequencies</span>
+                </button>
+                <button onclick="clearPage()" class="mobile-action-btn">
+                  <span>🗑️</span>
+                  <span>Clear</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Desktop Header -->
+            <div
+              class="hidden md:block px-3 md:px-6 py-4 border-b border-gray-700/30"
+            >
+              <div class="flex items-center justify-between">
+                <h1 class="text-xl md:text-2xl font-bold text-white">
+                  Welcome to Manifestation Studio
+                </h1>
+
+                <!-- Desktop Navigation Controls -->
+                <div class="flex items-center gap-2">
+                  <button
+                    onclick="createNewPage()"
+                    class="p-2 rounded transition-all text-blue-400 hover:bg-blue-600/20"
+                    title="New Vision Page"
+                  >
+                    ➕
+                  </button>
+                  <button
+                    onclick="showBinauralControls()"
+                    class="p-2 rounded transition-all text-cyan-400 hover:bg-cyan-600/20"
+                    title="Binaural Beats"
+                  >
+                    🎧
+                  </button>
+                  <button
+                    onclick="showSolfeggioPresets()"
+                    class="p-2 rounded transition-all text-violet-400 hover:bg-violet-600/20"
+                    title="Solfeggio Presets"
+                  >
+                    🎵
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Welcome Content -->
+            <div class="text-center py-8 md:py-16">
+              <div class="max-w-4xl mx-auto">
+                <div class="text-4xl md:text-6xl mb-6">✨</div>
+                <p class="text-lg md:text-xl text-gray-300 mb-6">
+                  Create beautiful vision boards with simple text notes and
+                  inspiring images
+                </p>
+                <p class="text-gray-400 mb-8">
+                  A clean, Notion-like interface for organizing your thoughts
+                  and visions
+                </p>
+                <!-- Quick Start Actions -->
+                <div
+                  class="flex flex-col sm:flex-row justify-center gap-4 mb-8 md:mb-12"
+                >
+                  <button
+                    onclick="createNewPage()"
+                    class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-all"
+                  >
+                    📝 Create Vision Page
+                  </button>
+                  <button
+                    onclick="showBinauralControls()"
+                    class="bg-cyan-600 hover:bg-cyan-700 px-6 py-3 rounded-lg font-medium transition-all"
+                  >
+                    🎧 Setup Audio
+                  </button>
+                </div>
+                <!-- Feature Overview -->
+                <div
+                  class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto text-left"
+                >
+                  <div class="p-4">
+                    <div class="text-2xl mb-2">📝</div>
+                    <h3 class="text-lg font-bold mb-2 text-blue-300">
+                      Text Notes
+                    </h3>
+                    <p class="text-sm text-gray-400">
+                      Write your thoughts, goals, and affirmations. Double-click
+                      any text to edit it instantly.
+                    </p>
+                  </div>
+
+                  <div class="p-4">
+                    <div class="text-2xl mb-2">🖼️</div>
+                    <h3 class="text-lg font-bold mb-2 text-green-300">
+                      Vision Images
+                    </h3>
+                    <p class="text-sm text-gray-400">
+                      Add inspiring images to your vision board. Drag & drop or
+                      click to upload.
+                    </p>
+                  </div>
+                </div>
+                <div class="mt-8">
+                  <p class="text-sm text-gray-500">
+                    Start by creating a new vision page. Click "Add Text" to
+                    write notes and "Add Images" to upload pictures.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input
+      type="file"
+      id="imageUpload"
+      accept="image/*"
+      class="hidden"
+      multiple
+    />
+    <!-- Modular JavaScript files - load in dependency order -->
+    <script src="auth-security.js"></script>
+    <script src="audio-engine.js"></script>
+    <script src="vision-board.js"></script>
+    <script src="ui-controls.js"></script>
+    <!-- Initialize control bar after all modules are loaded -->
+    <script>
+      // Mobile sidebar functions
+      function toggleMobileSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("mobileOverlay");
+
+        if (sidebar.classList.contains("mobile-open")) {
+          closeMobileSidebar();
+        } else {
+          sidebar.classList.add("mobile-open");
+          overlay.classList.remove("hidden");
+          document.body.style.overflow = "hidden";
+        }
+      }
+
+      function closeMobileSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("mobileOverlay");
+
+        sidebar.classList.remove("mobile-open");
+        overlay.classList.add("hidden");
+        document.body.style.overflow = "";
+      }
+
+      // Close sidebar when clicking on overlay
+      document.addEventListener("click", function (e) {
+        if (e.target.id === "mobileOverlay") {
+          closeMobileSidebar();
+        }
+      });
+
+      // Handle window resize
+      window.addEventListener("resize", function () {
+        if (window.innerWidth >= 768) {
+          // md breakpoint
+          closeMobileSidebar();
+        }
+      });
+
+      // Prevent body scroll when sidebar is open on mobile
+      function preventBodyScroll(e) {
+        const sidebar = document.getElementById("sidebar");
+        if (
+          sidebar.classList.contains("mobile-open") &&
+          window.innerWidth < 768
+        ) {
+          if (!sidebar.contains(e.target)) {
+            e.preventDefault();
+          }
+        }
+      }
+      document.addEventListener("touchmove", preventBodyScroll, {
+        passive: false,
+      });
+
+      // Mobile-specific enhancements
+      function updateMobileActionBar() {
+        const actionBar = document.querySelector(".mobile-action-bar");
+        const pageId = window.VisionBoard?.getCurrentPageId();
+
+        if (actionBar && pageId) {
+          // Enable page-specific actions when a page is loaded
+          const pageActions = actionBar.querySelectorAll(
+            'button[onclick*="addText"], button[onclick*="handleImageUpload"], button[onclick*="clearPage"]'
+          );
+          pageActions.forEach((btn) => {
+            btn.disabled = false;
+            btn.classList.remove("opacity-50");
+          });
+        } else if (actionBar) {
+          // Disable page-specific actions when no page is loaded
+          const pageActions = actionBar.querySelectorAll(
+            'button[onclick*="addText"], button[onclick*="handleImageUpload"], button[onclick*="clearPage"]'
+          );
+          pageActions.forEach((btn) => {
+            btn.disabled = true;
+            btn.classList.add("opacity-50");
+          });
+        }
+      }
+
+      // Handle mobile-specific touch events for better UX
+      document.addEventListener(
+        "touchstart",
+        function (e) {
+          const target = e.target.closest(
+            ".mobile-action-btn, .notion-button, button"
+          );
+          if (target) {
+            target.style.transform = "scale(0.95)";
+          }
+        },
+        { passive: true }
+      );
+
+      document.addEventListener(
+        "touchend",
+        function (e) {
+          const target = e.target.closest(
+            ".mobile-action-btn, .notion-button, button"
+          );
+          if (target) {
+            target.style.transform = "";
+          }
+        },
+        { passive: true }
+      );
+
+      // Improve mobile text editing experience
+      function enhanceMobileTextEditing() {
+        // Add double-tap to edit functionality for mobile
+        let lastTap = 0;
+        document.addEventListener("touchend", function (e) {
+          const currentTime = new Date().getTime();
+          const tapLength = currentTime - lastTap;
+
+          if (tapLength < 500 && tapLength > 0) {
+            const target = e.target.closest(
+              '.notion-block[contenteditable="false"]'
+            );
+            if (target && window.innerWidth < 768) {
+              // Double-tap detected on mobile, start editing
+              if (window.editBlock) {
+                window.editBlock(target.dataset.id);
+              }
+              e.preventDefault();
+            }
+          }
+          lastTap = currentTime;
+        });
+      }
+
+      // Initialize mobile enhancements
+      enhanceMobileTextEditing();
+
+      window.addEventListener("load", function () {
+        // Wait a bit more to ensure all modules are fully loaded
+        setTimeout(function () {
+          // Remove any existing control bars
+          const existing = document.querySelectorAll(
+            ".controls-container, #directControlBar"
+          );
+          existing.forEach((el) => el.remove());
+
+          // Create control bar
+          const controlsContainer = document.createElement("div");
+          controlsContainer.className =
+            "fixed top-4 right-4 hidden md:flex items-center gap-1 controls-container";
+          controlsContainer.style.cssText = `
+            z-index: 9999 !important;
+            background: rgba(17, 24, 39, 0.95) !important;
+            backdrop-filter: blur(12px) !important;
+            border-radius: 8px !important;
+            padding: 6px !important;
+            border: 1px solid rgba(75, 85, 99, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+          `;
+
+          // Focus mode button
+          const focusBtn = document.createElement("button");
+          focusBtn.id = "focusModeBtn";
+          focusBtn.innerHTML = "🎯";
+          focusBtn.title = "Focus Mode";
+          focusBtn.className =
+            "bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm transition-all";
+          focusBtn.onclick =
+            window.toggleFocusMode || window.UIControls?.toggleFocusMode;
+
+          // Fullscreen button
+          const fullscreenBtn = document.createElement("button");
+          fullscreenBtn.innerHTML = "⛶";
+          fullscreenBtn.title = "Toggle Fullscreen";
+          fullscreenBtn.className =
+            "bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm transition-all";
+          fullscreenBtn.onclick =
+            window.toggleFullscreen || window.UIControls?.toggleFullscreen;
+
+          // Password button
+          const passwordBtn = document.createElement("button");
+          passwordBtn.innerHTML = "🔐";
+          passwordBtn.title = "Password Settings";
+          passwordBtn.className =
+            "bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm transition-all";
+          passwordBtn.onclick =
+            window.showPasswordSettings ||
+            window.AuthModule?.showPasswordSettings;
+
+          // Divider
+          const divider = document.createElement("div");
+          divider.className = "w-px h-6 bg-gray-600 mx-1";
+
+          // Page nav section
+          const pageNavSection = document.createElement("div");
+          pageNavSection.id = "topPageNavigation";
+          pageNavSection.className = "flex items-center gap-1";
+
+          // Assemble
+          controlsContainer.appendChild(focusBtn);
+          controlsContainer.appendChild(fullscreenBtn);
+          controlsContainer.appendChild(passwordBtn);
+          controlsContainer.appendChild(divider);
+          controlsContainer.appendChild(pageNavSection);
+
+          document.body.appendChild(controlsContainer);
+
+          // Initialize mobile action bar state
+          setTimeout(updateMobileActionBar, 200);
+        }, 100);
+      });
+    </script>
+
+    <!-- Hidden file input -->
+    <input
+      type="file"
+      id="imageUpload"
+      accept="image/*"
+      class="hidden"
+      multiple
+    />
+    <!-- Modular JavaScript files - load in dependency order -->
+    <script src="auth-security.js"></script>
+    <script src="crypto-module.js"></script>
+    <script src="audio-engine.js"></script>
+    <script src="vision-board.js"></script>
+    <script src="ui-controls.js"></script>
+  </body>
+</html>
